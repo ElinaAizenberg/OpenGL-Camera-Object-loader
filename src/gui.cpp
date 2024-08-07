@@ -3,51 +3,28 @@
 #include <fstream>
 
 #include "imgui.h"
+#include "portable-file-dialogs.h"
+
 #include "../include/gui.h"
 #include "../include/config.h"
-
-#include "portable-file-dialogs.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
 
 void GuiWindow::drawMenu(std::tuple<int, int> window_parameters)
+/** Draws the main Menu with several items that can be called with shortcuts as well.
+If corresponding booleans are true, saves image of the screen in the selected folder and opens Help window.*/
 {
-    if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("File")) {
-            std::string open_file_shortcut = "Ctrl+";
-            open_file_shortcut += Config::getShortcut("OpenFile");
-            if (ImGui::MenuItem("Open", open_file_shortcut.c_str())) {
-                openFile();
-            }
-
-            std::string save_shortcut = "Ctrl+";
-            save_shortcut += Config::getShortcut("SaveImage");
-            if (ImGui::MenuItem("Save image", save_shortcut.c_str())) {
-                save_image_ = true;
-            }
-
-            std::string animate_shortcut = "Ctrl+";
-            animate_shortcut += Config::getShortcut("Animate");
-            if (ImGui::MenuItem("Hide / Show panel", animate_shortcut.c_str()))
-            {
-                animate_ = true;
-            }
-
-            std::string help_shortcut = "Ctrl+";
-            help_shortcut += Config::getShortcut("Help");
-            if (ImGui::MenuItem("Help", help_shortcut.c_str()))
-            {
-                help_window_ = true;
-            }
-
-            std::string exit_shortcut = "Ctrl+";
-            exit_shortcut += Config::getShortcut("Exit");
-            if (ImGui::MenuItem("Exit", exit_shortcut.c_str()))
-            {
-                exitConfirmMessage();
-            }
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            addMenuItem("Open", "OpenFile", dummy_bool_, [this](){openFile();});
+            addMenuItem("Save image", "SaveImage", save_image_);
+            addMenuItem("Hide / Show panel", "Animate", animate_);
+            addMenuItem("Help", "Help", help_window_);
+            addMenuItem("Exit", "Exit", dummy_bool_, [this](){exitConfirmMessage();});
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
@@ -60,7 +37,26 @@ void GuiWindow::drawMenu(std::tuple<int, int> window_parameters)
     }
 }
 
+void GuiWindow::addMenuItem(const std::string &item, const std::string &shortcut, bool &bool_to_update,  const std::function<void()>& func)
+/** Creates a Main menu item with shortcut. If boolean is provided, switches it to true.
+If function object is provided, calls it.*/
+{
+    std::string open_file_shortcut = "Ctrl+";
+    open_file_shortcut += Config::getShortcut(shortcut);
+    if (ImGui::MenuItem(item.c_str(), open_file_shortcut.c_str()))
+    {
+        if (!bool_to_update){
+            bool_to_update = true;
+        }
+        if (func){
+            func();
+        }
+    }
+}
+
 void GuiWindow::drawMainPanel(DrawingLib &drawing_lib)
+/** Draws Settings window with x_position = 0 (the most left) and y_position calculated at the center of left side.
+Whenever animation is called via Main menu or short-cut (Ctrl+A), Settings is moved out/in. */
 {
     auto& gui_params = Config::getParameters();
 
@@ -69,18 +65,25 @@ void GuiWindow::drawMainPanel(DrawingLib &drawing_lib)
 
     if (animate_)
     {
+        // if animation step is negative (moves window out), still seen on the screen OR
+        // if animation step is positive (moves window in), x_position of window is still out of screen
         if ((animation_step_ < 0 && window_pos_x_ > -window_width_) || (animation_step_ > 0 && window_pos_x_ < 0))
         {
+            // move Settings window position by animation step every frame
             window_pos_x_ += animation_step_;
-        } else {
+        }
+        else
+        {
+            // disable window animation and switch animation direction for the next time
             animate_ = false;
             animation_step_ *= -1;
         }
     }
 
+    // calculate y_position to set Settings window in the center of vertical side of the viewport
     float window_pos_y = viewport->Pos.y + (viewport->Size.y - window_height_) / 2.0f;
-
-    if (window_pos_y < (viewport->Pos.y + menu_bar_height)){
+    if (window_pos_y < (viewport->Pos.y + menu_bar_height))
+    {
         window_pos_y = viewport->Pos.y + menu_bar_height;
     }
 
@@ -98,26 +101,31 @@ void GuiWindow::drawMainPanel(DrawingLib &drawing_lib)
     ImGui::Spacing();
 
     std::string camera_button = (drawing_lib.getCameraMetadata().find("Dome")!= std::string::npos) ? "FP camera" : "Dome camera";
-    if (ImGui::Button(camera_button.c_str(), button_size_)){
+    if (ImGui::Button(camera_button.c_str(), button_size_))
+    {
         drawing_lib.switchPerspectiveCameraMode();
     }
 
-    if (camera_button == "FP camera"){
+    if (camera_button == "FP camera")
+    {
         ImGui::SameLine();
         std::string view_button = (drawing_lib.getCameraMetadata().find("Orthogonal")!= std::string::npos) ? "Perspective" : "Orthogonal";
-        if (ImGui::Button(view_button.c_str(), button_size_)){
+        if (ImGui::Button(view_button.c_str(), button_size_))
+        {
             drawing_lib.switchCameraView();
         }
     }
 
     ImGui::Spacing();
     std::string viewport_button = (Config::getParameters().engineering_view_) ? "Regular view" : "Engineering view";
-    if (ImGui::Button(viewport_button.c_str(), button_size_)){
+    if (ImGui::Button(viewport_button.c_str(), button_size_))
+    {
         Config::switchEngineeringView();
     }
 
     ImGui::Spacing();
-    if (ImGui::Button("Reset camera", button_size_)){
+    if (ImGui::Button("Reset camera", button_size_))
+    {
         drawing_lib.reset();
     }
 
@@ -146,35 +154,40 @@ void GuiWindow::drawMainPanel(DrawingLib &drawing_lib)
 
     ImGui::Spacing();
     ImGui::SeparatorText("Shortcuts");
-    if (ImGui::TreeNode("General")){
-        ShortcutInput("Open file: CTRL + ", "OpenFile");
-        ShortcutInput("Save image: CTRL + ", "SaveImage");
-        ShortcutInput("Hide/Show panel: CTRL + ", "Animate");
-        ShortcutInput("Help: CTRL + ", "Help");
-        ShortcutInput("Exit: CTRL + ", "Exit");
+    if (ImGui::TreeNode("General"))
+    {
+        shortcutInput("Open file: CTRL + ", "OpenFile");
+        shortcutInput("Save image: CTRL + ", "SaveImage");
+        shortcutInput("Hide/Show panel: CTRL + ", "Animate");
+        shortcutInput("Help: CTRL + ", "Help");
+        shortcutInput("Exit: CTRL + ", "Exit");
         ImGui::TreePop();
     }
-    if (ImGui::TreeNode("Camera")){
-        ShortcutInput("Switch camera mode: ", "SwitchCameraMode");
-        ShortcutInput("Switch camera view: ", "SwitchCameraView");
-        ShortcutInput("Grid: ", "EnableGrid");
-        ShortcutInput("Engineering view: ", "SwitchEngineeringView");
+    if (ImGui::TreeNode("Camera"))
+    {
+        shortcutInput("Switch camera mode: ", "SwitchCameraMode");
+        shortcutInput("Switch camera view: ", "SwitchCameraView");
+        shortcutInput("Grid: ", "EnableGrid");
+        shortcutInput("Engineering view: ", "SwitchEngineeringView");
 
         ImGui::TreePop();
     }
-
     ImGui::End();
-
 }
 
-int GuiWindow::InputTextToUpperCaseCallback(ImGuiInputTextCallbackData* data) {
-    if (data->EventChar >= 'a' && data->EventChar <= 'z') {
+int GuiWindow::inputTextToUpperCaseCallback(ImGuiInputTextCallbackData* data)
+/** Callback function that applies upper case to lower case chars.*/
+{
+    if (data->EventChar >= 'a' && data->EventChar <= 'z')
+    {
         data->EventChar = std::toupper(data->EventChar);
     }
     return 0;
 }
 
-void GuiWindow::ShortcutInput(const std::string& text, const std::string& shortcut_key) const{
+void GuiWindow::shortcutInput(const std::string& text, const std::string& shortcut_key) const
+/** Creates a set of a string with short-cut name and input field to assign a char to a short-cut items.*/
+{
     ImVec2 startPos = ImGui::GetCursorPos();
     ImGui::Text("%s", text.c_str());
 
@@ -184,16 +197,16 @@ void GuiWindow::ShortcutInput(const std::string& text, const std::string& shortc
     char Shortcut[2] = { Config::getShortcut(shortcut_key), '\0' };
 
     std::string label = "##"+ shortcut_key;
-    if (ImGui::InputText(label.c_str(), Shortcut, IM_ARRAYSIZE(Shortcut), ImGuiInputTextFlags_CallbackCharFilter, InputTextToUpperCaseCallback))
+    if (ImGui::InputText(label.c_str(), Shortcut, IM_ARRAYSIZE(Shortcut), ImGuiInputTextFlags_CallbackCharFilter, inputTextToUpperCaseCallback))
     {
         Config::getShortcut(shortcut_key) = Shortcut[0];
     }
     ImGui::PopItemWidth();
 }
 
-
-
-void GuiWindow::handleShortcuts(std::tuple<int, int> window_parameters) {
+void GuiWindow::handleShortcuts(std::tuple<int, int> window_parameters)
+/** Sets up callback functions for ImGui short-cuts..*/
+{
     ImGuiIO& io = ImGui::GetIO();
 
     if (io.KeyCtrl && ImGui::IsKeyPressed(static_cast<ImGuiKey>(Config::getShortcut("Animate"))))
@@ -218,7 +231,9 @@ void GuiWindow::handleShortcuts(std::tuple<int, int> window_parameters) {
     }
 }
 
-void GuiWindow::exitConfirmMessage() {
+void GuiWindow::exitConfirmMessage()
+/** Displays a confirmation dialog asking if the user wants to exit, exits the program if 'Yes' is selected. */
+{
     auto button = pfd::message("Action requested", "Are you sure you want to exit?",
                                pfd::choice::yes_no, pfd::icon::question).result();
 
@@ -231,8 +246,9 @@ void GuiWindow::exitConfirmMessage() {
     }
 }
 
-
-void GuiWindow::openFile() {
+void GuiWindow::openFile()
+/** Opens a file dialog to select an .obj file and loads it, notifies the user if no file is selected.*/
+{
     auto selection = pfd::open_file("Select a file", ".",
                                     { "Object Files", "*.obj"}).result();
     if (!selection.empty())
@@ -246,7 +262,9 @@ void GuiWindow::openFile() {
     }
 }
 
-void GuiWindow::saveRenderedImage(const char* filename, int width, int height) {
+void GuiWindow::saveRenderedImage(const char* filename, int width, int height)
+/** Creates a .png file with the screen image.*/
+{
     std::vector<unsigned char> pixels(width * height * 3);
     glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
 
@@ -257,43 +275,43 @@ void GuiWindow::saveRenderedImage(const char* filename, int width, int height) {
         }
     }
 
-    if (!stbi_write_png(filename, width, height, 3, pixels.data(), width * 3)) {
+    if (!stbi_write_png(filename, width, height, 3, pixels.data(), width * 3))
+    {
         std::cerr << "Failed to save image to " << filename << std::endl;
-    } else {
+    } else
+    {
         std::cout << "Image saved to " << filename << std::endl;
     }
 }
 
-void GuiWindow::makePrtSc(int width, int height) {
+void GuiWindow::makePrtSc(int width, int height)
+/** Makes print-screen and saves .png file into the selected folder with saveRenderedImage function.*/
+{
     auto folder = pfd::select_folder("Select a folder").result();
-    if (!folder.empty()){
+
+    if (!folder.empty())
+    {
         time_t curr_time;
         tm * curr_tm;
-        char date_string[100];
-        char time_string[100];
+        char date_string[50];
 
         time(&curr_time);
         curr_tm = localtime(&curr_time);
 
-        strftime(date_string, 50, "%Y_%m_%d", curr_tm);
-        strftime(time_string, 50, "%H_%M", curr_tm);
-
-        rendered_image_path_ = folder + "/image_" +date_string+"_" + time_string+ ".png";
-
+        strftime(date_string, sizeof(date_string), "%Y_%m_%d_%H_%M", curr_tm);
+        rendered_image_path_ = folder + "/image_" + date_string + ".png";
         saveRenderedImage(rendered_image_path_.c_str(),width, height);
-
         rendered_image_path_.clear();
-        save_image_ = false;
     }
     save_image_ = false;
 }
 
-void GuiWindow::drawHelpWindow() {
+void GuiWindow::drawHelpWindow()
+/** Prints README.txt file content with information related to all functionality in this project in n individual window. */
+{
     ImGui::Begin("Help", &help_window_);
     ImGui::TextWrapped("%s", readme_txt_.c_str());
     ImGui::End();
-
-
 }
 
 std::string GuiWindow::readTextFile(const std::string &filePath)
@@ -312,3 +330,4 @@ std::string GuiWindow::readTextFile(const std::string &filePath)
 
     return buffer.str();
 }
+
