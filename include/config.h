@@ -1,7 +1,6 @@
 #ifndef PROJECT_2_CONFIG_H
 #define PROJECT_2_CONFIG_H
 
-
 #include <map>
 
 struct Parameters
@@ -21,17 +20,23 @@ public:
     static Parameters& getParameters(){return parameters_;}
     static std::map<std::string, char>& getShortcuts(){return shortcuts_;}
     static char& getShortcut(const std::string& key){return shortcuts_[key];}
-
-    static void switchGrid(){parameters_.grid_ = !parameters_.grid_;}
-    static void switchEngineeringView()
+    
+    static void switchGrid()
+    /** Turn on/off grid.*/
     {
-        if (!parameters_.engineering_view_){
+        parameters_.grid_ = !parameters_.grid_;
+    }
+    static void switchEngineeringView()
+    /** Turn on/off engineering view (top/front/side views of the object).*/
+    {
+        if (!parameters_.engineering_view_)
+        {
             parameters_.grid_ = true;
             parameters_.ortho_coefficient_ = 20;
         }
-        else {
+        else 
+        {
             parameters_.ortho_coefficient_ = 15;
-
         }
         parameters_.engineering_view_ = !parameters_.engineering_view_;
     }
