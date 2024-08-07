@@ -1,12 +1,12 @@
 
 #include <iostream>
+#include "tiny_obj_loader.h"
 #include "../include/loader.h"
-
-
 
 void ObjectLoader::loadObFileData(const std::string &filepath,
                                   std::vector<float> &object_vertices,
                                   std::vector<std::vector<unsigned int>> &object_shapes)
+/** Loads vertices and vector of shapes where each shape contains indices using open-source library tiny-obj-loader.*/
 {
     tinyobj::ObjReaderConfig reader_config;
     tinyobj::ObjReader reader;
