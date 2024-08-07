@@ -3,7 +3,6 @@
 
 #include <string>
 #include <vector>
-#include "tiny_obj_loader.h"
 
 class ObjectLoader
 {
