@@ -1,5 +1,6 @@
 # Specify the minimum version for CMake
 cmake_minimum_required(VERSION 3.10)
+
 # Project name
 project(project_2)
 
@@ -11,7 +12,7 @@ if(POLICY CMP0072)
 endif()
 
 #TODO Specify the directory where imgui and other libraries are located
-set(EXTERNAL_LIB_DIR /home/elina/MyProjects/libs)
+set(EXTERNAL_LIB_DIR /path_to_directory/libs)
 
 # Define the path to the central ImGui directory
 set(IMGUI_DIR ${EXTERNAL_LIB_DIR}/imgui)
@@ -40,7 +41,7 @@ set(IMGUI_SRC
 
 # Add the include directory to the include path
 include_directories(include)
-include_directories(objects)
+
 # Include the directory where the external library headers are located
 include_directories(${IMGUI_DIR}
         ${EXTERNAL_LIB_DIR}/imgui_pfd
