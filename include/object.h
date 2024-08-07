@@ -7,10 +7,6 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-struct BoundingBox {
-    glm::vec3 min;
-    glm::vec3 max;
-};
 
 
 class Object{
@@ -23,22 +19,19 @@ public:
     void rotateObjects(int i, int direction);
 
 private:
-
-    BoundingBox bounding_box_;
-    BoundingBox calculateBoundingBox();
-
-    glm::vec3 calculateObjectSize() const;
-
-
-    std::vector<float> text_vertices_;
-    std::vector<std::vector<unsigned int>> shapes_;
+    struct BoundingBox {
+        glm::vec3 min{0.0, 0.0, 0.0};
+        glm::vec3 max{0.0, 0.0, 0.0};
+    };
 
     std::vector<GLfloat> vertices_{};
+    std::vector<std::vector<unsigned int>> shapes_;
 
-    glm::vec3 size_;
-    float max_dimension_;
-
+    float max_length_{0.0};
     int rotation_[3] = {0,0,0};
+
+    BoundingBox calculateBoundingBox();
+    static float calculateObjectSize(Object::BoundingBox bounding_box) ;
 
 };
 
