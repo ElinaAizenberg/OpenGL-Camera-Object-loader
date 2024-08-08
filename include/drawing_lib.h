@@ -9,25 +9,23 @@
 
 class DrawingLib{
 public:
-    DrawingLib()= default;
-
+    DrawingLib() = default;
     GLFWwindow* createWindow() const;
     void getWindowSize(GLFWwindow* window);
     std::tuple<int, int> windowSize(){return std::make_tuple(window_width_, window_height_);}
 
     void drawScene(GLFWwindow* window, Object& object, bool imGuiCaptureMouse);
-
-
     void defineCallbackFunction(GLFWwindow* window);
     std::string getCameraMetadata(){return "Camera mode: " + current_camera_->getCameraMode() + "\nCamera view: " + current_camera_->getCameraView();}
     void switchPerspectiveCameraMode()
     {
         current_camera_ = (current_camera_->mode() == kFirstPerson) ? static_cast<ViewCamera*>(&dome_) : static_cast<ViewCamera*>(&fps_);
     }
-    void turnOnDomeCamera(){current_camera_ = static_cast<ViewCamera*>(&dome_);}
-    void switchCameraView(){
+    void switchCameraView()
+    {
         current_camera_-> switchView();
     }
+    void turnOnDomeCamera(){current_camera_ = static_cast<ViewCamera*>(&dome_);}
 
     void drawRuler();
     void reset();
@@ -49,13 +47,11 @@ private:
     double current_pos_x_{0}, current_pos_y_{0}, prev_pos_x_{0}, prev_pos_y_{0};
     double start_pos_x_{0}, start_pos_y_{0};
 
-
     FirstPersonCamera fps_ = FirstPersonCamera(glm::vec3(0.0f, 3.0f, 20.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     DomeCamera dome_       = DomeCamera(glm::vec3(0.0f, 1.0f, 20.0), glm::vec3(0.0f, 1.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), 20);
     DomeCamera engineering_camera_       = DomeCamera(glm::vec3(0.0f, 1.0f, 20.0), glm::vec3(0.0f, 1.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), 20);
 
     ViewCamera* current_camera_ = &fps_;
-
 
     void drawRegularScene(GLFWwindow* window, Object &object);
     void drawEngineeringScene(GLFWwindow* window, Object &object);
