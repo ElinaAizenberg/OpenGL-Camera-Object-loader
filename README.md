@@ -1,9 +1,25 @@
 # OpenGL: object loader, camera system
 ## Overview
-A brief description of the project, its purpose, and what it does.
+This mini-application demonstrates the implementation of a versatile camera system and a simple .obj file loader using OpenGL. Designed as part of a set of mini-applications, its main goal is to illustrate various methods of rendering, object loading, and user interaction within an OpenGL context. The application employs the fixed-function pipeline of OpenGL 3.0 and integrates the Dear ImGui library to provide an intuitive graphical user interface.
+It serves as a practical example for beginners to learn and understand the intricacies of camera systems and object handling in 3D graphics. The code is heavily commented, with detailed function descriptions to facilitate learning and ease of understanding.
 
 ## Features
-- 
+- **Load and Scale .obj Files:** easily load any .obj file and automatically scale it to fit the screen for optimal viewing.
+- **Save Window Image:** capture and save the current window image to a selected folder.
+- **Camera System:**
+  - *First Person Camera:* navigate the scene from a first-person perspective.
+  - *Dome Camera:* provides an alternative camera mode for different viewing angles.
+- **Interactive Controls:**
+  - *Mouse:* rotate the camera to explore the 3D scene.
+  - *Keyboard:* move the object within the scene.
+- **Camera and Projection Switching:** switch between camera modes and orthogonal/perspective projections using keyboard shortcuts.
+- **ImGui Integration:**
+  - *Camera Settings:* access and modify camera settings through an ImGui window.
+  - *Key Reassignment:* customize keyboard controls for various commands within the ImGui interface.
+- **Multiple Views:**
+  - *Regular View:* a single camera view for standard operations.
+  - *Engineering View:* quad-view setup (top, front, side, and regular view) for detailed analysis and manipulation.
+- **Ruler Tool:** in Engineering View, apply a ruler tool with a right-click for precise measurements and alignments.
 
 ## Screenshots
 <img src="https://github.com/user-attachments/assets/889a11ad-2051-49b2-9572-e9881aad1657" width="500">
