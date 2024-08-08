@@ -1,6 +1,6 @@
 # OpenGL: object loader, camera system
 ## Overview
-This mini-application demonstrates the implementation of a versatile camera system and a simple .obj file loader using OpenGL. Designed as part of a set of mini-applications, its main goal is to illustrate various methods of rendering, object loading, and user interaction within an OpenGL context. The application employs the fixed-function pipeline of OpenGL 3.0 and integrates the Dear ImGui library to provide an intuitive graphical user interface.
+This mini-application demonstrates the implementation of a versatile camera system and a simple .obj file loader (with [TinyObjLoader](https://github.com/tinyobjloader/tinyobjloader)) using OpenGL. Designed as part of a set of mini-applications, its main goal is to illustrate various methods of rendering, object loading, and user interaction within an OpenGL context. The application employs the fixed-function pipeline of OpenGL 3.0 and integrates the Dear ImGui library to provide an intuitive graphical user interface.
 It serves as a practical example for beginners to learn and understand the intricacies of camera systems and object handling in 3D graphics. The code is heavily commented, with detailed function descriptions to facilitate learning and ease of understanding.
 
 ## Features
