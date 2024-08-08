@@ -1,5 +1,3 @@
-
-
 #ifndef PROJECT_2_FONT_H
 #define PROJECT_2_FONT_H
 #include <GLFW/glfw3.h>

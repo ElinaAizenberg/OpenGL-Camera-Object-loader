@@ -9,7 +9,7 @@
 
 class GuiWindow{
 public:
-    explicit GuiWindow(Object& object): object_(object){readme_txt_ = readTextFile("../ReadMe.txt");};
+    explicit GuiWindow(Object& object): object_(object){readme_txt_ = readTextFile("../docs/ReadMe.txt");};
     void drawMenu(std::tuple<int, int> window_parameters);
     void drawMainPanel(DrawingLib &drawing_lib);
     void handleShortcuts(std::tuple<int, int> window_parameters);

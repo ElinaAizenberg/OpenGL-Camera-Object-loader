@@ -20,7 +20,7 @@ public:
     static Parameters& getParameters(){return parameters_;}
     static std::map<std::string, char>& getShortcuts(){return shortcuts_;}
     static char& getShortcut(const std::string& key){return shortcuts_[key];}
-    
+
     static void switchGrid()
     /** Turn on/off grid.*/
     {
@@ -34,7 +34,7 @@ public:
             parameters_.grid_ = true;
             parameters_.ortho_coefficient_ = 20;
         }
-        else 
+        else
         {
             parameters_.ortho_coefficient_ = 15;
         }

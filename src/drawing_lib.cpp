@@ -1,16 +1,11 @@
 
 #include <algorithm>
 #include <tuple>
-#include "backends/imgui_impl_opengl3.h"
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <iostream>
+#include "stb_image_write.h"
 #include "../include/drawing_lib.h"
 #include "../include/font.h"
 #include "../include/config.h"
-#include "stb_image_write.h"
-
 
 
 GLFWwindow* DrawingLib::createWindow() const
@@ -28,56 +23,73 @@ void DrawingLib::getWindowSize(GLFWwindow* window)
     window_height_ = h;
     dim_ratio_ = static_cast<float>(window_height_) / static_cast<float>(window_width_);
 }
-void DrawingLib::drawScene(GLFWwindow* window, Object &object, bool imGuiCaptureMouse){
+
+void DrawingLib::drawScene(GLFWwindow* window, Object &object, bool imGuiCaptureMouse)
+/** Renders the scene based on the current configuration, either in engineering or regular view. */
+{
     imgui_capture_mouse_ = imGuiCaptureMouse;
 
-    if (Config::getParameters().engineering_view_){
+    if (Config::getParameters().engineering_view_)
+    {
         drawEngineeringScene(window, object);
     }
-    else{
+    else
+    {
         drawRegularScene(window, object);
     }
 }
 
-void DrawingLib::drawRegularScene(GLFWwindow* window, Object &object) {
+void DrawingLib::drawRegularScene(GLFWwindow* window, Object &object)
+/** Renders the scene using the regular view configuration. */
+{
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // Viewport is the region of the window where the rendered image is displayed.
+    //It's specified in screen coordinates, with (0, 0) being the bottom-left corner of the window
     glViewport(0, 0, window_width_, window_height_);
 
+    // Switches the current matrix mode to the projection matrix.
+    // It indicates that subsequent matrix operations (like glLoadIdentity(), glOrtho(), glFrustum(), etc.)
+    // will affect the projection matrix.
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     current_camera_->setView(dim_ratio_);
 
+    // After setting up the projection matrix, switches to GL_MODELVIEW mode to handle model transformations.
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     current_camera_->applyMatrix();
+
     if (Config::getParameters().grid_)
     {
         drawGrid();
     }
 
-
     float scalingFactor = object.calculateScalingFactor(reference_size_);
-
     glScalef(scalingFactor, scalingFactor, scalingFactor);
 
     object.draw();
-
-
 }
 
-void DrawingLib::drawEngineeringScene(GLFWwindow* window, Object &object){
-
+void DrawingLib::drawEngineeringScene(GLFWwindow* window, Object &object)
+/** Renders the scene using the Engineering view configuration. */
+{
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Free view uses Dome camera by default.
     turnOnDomeCamera();
+    // Engineering view assumes orthogonal projection.
     engineering_camera_.orthogonalView();
 
-    for (int i = 0; i< 2; i++){
-        for (int j = 0; j< 2; j++) {
+    // each view (Front, Top, Side and Free) is rendered individually.
+    for (int i = 0; i< 2; i++)
+        {
+        for (int j = 0; j< 2; j++)
+            {
             DomeCameraRotate ortho_view;
             dim_ratio_ = static_cast<float>(window_height_/2) / static_cast<float>(window_width_/2);
             glViewport(i * (window_width_/2), j * (window_height_/2), window_width_/2, window_height_/2);
@@ -98,7 +110,8 @@ void DrawingLib::drawEngineeringScene(GLFWwindow* window, Object &object){
                 ortho_view = kFree;
             }
 
-            if (ortho_view == kFree){
+            if (ortho_view == kFree)
+            {
                 current_camera_ ->setView(dim_ratio_);
                 glMatrixMode(GL_MODELVIEW);
                 glLoadIdentity();
@@ -110,7 +123,7 @@ void DrawingLib::drawEngineeringScene(GLFWwindow* window, Object &object){
                 glLoadIdentity();
                 engineering_camera_.viewOrtho(ortho_view);
             }
-
+            // ruler cannot be used in Free view section.
             if ((std::get<0>(current_viewport_) == i && std::get<1>(current_viewport_) == j) || (i==1 && j == 1)){
                 if (ruler_){
                     drawRuler();
@@ -127,15 +140,20 @@ void DrawingLib::drawEngineeringScene(GLFWwindow* window, Object &object){
 
             object.draw();
 
-            drawObjectsMetadata(i, j, ortho_view);
+            printOrthoViewType(i, j, ortho_view);
         }
 
     }
 }
 
 
-void DrawingLib::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods){
-    if (!imgui_capture_mouse_){
+void DrawingLib::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+/** Handles mouse button events in a GLFW window. If the cursor position is not on any of ImGui elements,
+it performs actions on left-click, double left-click and right-click. */
+{
+    // this boolean is initialized in main.py and checks if mouse position is on any of ImGui elements
+    if (!imgui_capture_mouse_)
+    {
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
         {
             left_button_down_ = true;
@@ -150,7 +168,6 @@ void DrawingLib::mouseButtonCallback(GLFWwindow* window, int button, int action,
             right_button_down_ = true;
             glfwGetCursorPos(window, &cursor_pos_x_, &cursor_pos_y_);
             current_viewport_ = getCurrentViewport(current_pos_x_, current_pos_y_);
-
         }
         if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
         {
@@ -161,8 +178,8 @@ void DrawingLib::mouseButtonCallback(GLFWwindow* window, int button, int action,
 }
 
 
-void DrawingLib::drawObjectsMetadata(int i, int j, DomeCameraRotate ortho_view)
-/** Draws metadata for all objects in the scene. */
+void DrawingLib::printOrthoViewType(int i, int j, DomeCameraRotate ortho_view)
+/** Prints the name of the view (Front, Top, Side) when Engineering view is on. */
 {
     glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -185,24 +202,26 @@ void DrawingLib::drawObjectsMetadata(int i, int j, DomeCameraRotate ortho_view)
 
 void DrawingLib::cursorPositionCallback(GLFWwindow* window,
                                         double input_cursor_pos_x,
-                                        double input_cursor_pos_y){
-
+                                        double input_cursor_pos_y)
+/** Handles cursor movement events in a GLFW window.*/
+{
     prev_pos_x_    = current_pos_x_;
     prev_pos_y_    = current_pos_y_;
     current_pos_x_ = input_cursor_pos_x;
     current_pos_y_ = input_cursor_pos_y;
-
-
 
     if (left_button_down_)
     {
         auto delta_coordinates = calculateCoordinatesOnMouseMove(2);
         current_camera_->rotate(std::get<0>(delta_coordinates), std::get<1>(delta_coordinates));
     }
-    if (right_button_down_){
+    if (right_button_down_)
+    {
+        // ruler is turned on only in engineering view and for Front, Top, Side views (not Free view).
         if (!ruler_)
         {
-            if (current_camera_->mode() == kDome && !(std::get<0>(current_viewport_) == 1 && std::get<1>(current_viewport_) == 1)){
+            if (current_camera_->mode() == kDome && !(std::get<0>(current_viewport_) == 1 && std::get<1>(current_viewport_) == 1))
+            {
                 ruler_ = true;
                 start_pos_x_ = current_pos_x_;
                 start_pos_y_ = current_pos_y_;
@@ -212,6 +231,7 @@ void DrawingLib::cursorPositionCallback(GLFWwindow* window,
 }
 
 void DrawingLib::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+/** Handles keyboard events in a GLFW window.*/
 {
     if (action == GLFW_PRESS)
     {
@@ -231,7 +251,7 @@ void DrawingLib::keyCallback(GLFWwindow* window, int key, int scancode, int acti
         }
         if (shortcut_keys["SwitchEngineeringView"] == key_char)
         {
-            Config::switchEngineeringView();
+            Config::switchEngineeringView(); // enable/disable Engineering view
         }
         if (key == GLFW_KEY_LEFT)
         {
@@ -257,19 +277,22 @@ void DrawingLib::keyCallback(GLFWwindow* window, int key, int scancode, int acti
 }
 
 void DrawingLib::scrollCallback(GLFWwindow* window, double yoffset)
+/** Callback function that handles scroll input from the mouse wheel to zoom in or out of the scene.
+If ImGui is not capturing the mouse input and the zoom level is adjusted based on the scroll direction. */
 {
-    if (!imgui_capture_mouse_){
-    if (yoffset > 0)
-    {
-        current_camera_->zoom(0.1);   // zoom-in
-        engineering_camera_.zoom(0.1);
+    if (!imgui_capture_mouse_)
+        {
+            if (yoffset > 0)
+            {
+                current_camera_->zoom(0.1);   // zoom-in
+                engineering_camera_.zoom(0.1);
+            }
+            else if (yoffset < 0)
+            {
+                current_camera_->zoom(-0.1);   // zoom-out
+                engineering_camera_.zoom(-0.1);
+            }
     }
-    else if (yoffset < 0)
-    {
-        current_camera_->zoom(-0.1);   // zoom-out
-        engineering_camera_.zoom(-0.1);
-
-    }}
 }
 
 void DrawingLib::defineCallbackFunction(GLFWwindow* window)
@@ -304,9 +327,12 @@ void DrawingLib::defineCallbackFunction(GLFWwindow* window)
 
 
 void DrawingLib::drawGrid()
+/** Draws grid in steps: xz-plane with grid frequency defined in Config class, arrow for X-, Y-, Z-axis,
+coordinates of the maximum coordinate of xz-plane.*/
 {
     auto grid_params = Config::getParameters();
     glBegin(GL_LINES);
+
     for (int i = 0; i <= static_cast<int>(grid_params.grid_end_ / grid_params.grid_frequency_); ++i)
     {
         float value = i * grid_params.grid_frequency_;
@@ -317,8 +343,10 @@ void DrawingLib::drawGrid()
 
         glVertex3f(0, 0, -value);
         glVertex3f(grid_params.grid_end_, 0, -value);
-    };
+    }
+
     glEnd();
+
     drawAxisArrow(grid_params.grid_end_,0,0, "X");
     drawAxisArrow(0,grid_params.grid_end_,0, "Y");
     drawAxisArrow(0,0,-grid_params.grid_end_, "-Z");
@@ -328,23 +356,27 @@ void DrawingLib::drawGrid()
     int end_int = static_cast<int>(grid_params.grid_end_);
     std::string end_coordinates = std::to_string(end_int) + ", 0, -" + std::to_string(end_int);
     print_string(end_coordinates.c_str());
-
 }
 
 
-void DrawingLib::drawAxisArrow(float x, float y, float z, const std::string& axis_name) {
+void DrawingLib::drawAxisArrow(float x, float y, float z, const std::string& axis_name)
+/** Draws axis arrow in steps: axis line, arrow and prints axis name.*/
+{
     float arrowSize = 0.05f;
     float rgb[] = {0,0,0};
 
-    if (x >0){
-        rgb[0] = 255;
+    if (x > 0)
+    {
+        rgb[0] = 255; // color for X-axis
     }
-    else if (y>0){
-        rgb[1] = 255;
+    else if (y > 0)
+    {
+        rgb[1] = 255; // color for Y-axis
     }
     else{
-        rgb[2] = 255;
+        rgb[2] = 255; // color for Z-axis
     }
+    // size of the arrow is proportional to the length of the axis
     float height = std::sqrt(std::pow((x*arrowSize),2) + std::pow((y*arrowSize),2) + std::pow((z*arrowSize),2));
 
     glColor3f(rgb[0], rgb[1], rgb[2]);
@@ -361,7 +393,8 @@ void DrawingLib::drawAxisArrow(float x, float y, float z, const std::string& axi
     glBegin(GL_TRIANGLES);
 
     glVertex3f(x+x*arrowSize, y+y*arrowSize, z + z*arrowSize);
-    if (x>0){
+    if (x>0)
+    {
         glVertex3f(x, y, z+(height/2));
         glVertex3f(x, y, z-(height/2));
     }
@@ -404,19 +437,19 @@ std::tuple<double, double> DrawingLib::calculateCoordinatesOnMouseMove(int corre
 }
 
 
-
-void DrawingLib::drawRuler() {
+void DrawingLib::drawRuler()
+/** Draws ruler in Engineering view. In any of Front, Top, Side views ruler is turned on with right mouse click.
+Start, end coordinates and length of the draw vector are displayed as well.*/
+{
     auto start = convertCoordinates(start_pos_x_, start_pos_y_);
     double adjusted_start_x = std::get<0>(start);
     double adjusted_start_y = std::get<1>(start);
 
     auto end = convertCoordinates(current_pos_x_, current_pos_y_);
-
-
     double adjusted_current_x = std::get<0>(end);
     double adjusted_current_y = std::get<1>(end);
 
-
+    // depends on the view and which plane (xy, xz or yz) is nor displayed, the corresponding coordinate is set to 0.
     double x1,y1,z1, x2, y2, z2;
     if (std::get<0>(current_viewport_) == 0 && std::get<1>(current_viewport_) == 0){
         x1 =adjusted_start_x;
@@ -444,17 +477,17 @@ void DrawingLib::drawRuler() {
     }
 
     glColor3f(1,1,0);
-    glBegin(GL_LINES);  // Start drawing lines
+    glBegin(GL_LINES);
     glVertex3f(x1, y1, z1);
     glVertex3f(x2, y2, z2);
-    glEnd();  // End drawing lines
+    glEnd();
 
     glPointSize(5.0f);
 
     glBegin(GL_POINTS);
     glVertex3f(x1, y1, z1);
     glVertex3f(x2, y2, z2);
-    glEnd();  // End drawing lines
+    glEnd();
 
     std::string string_start = "(" + std::to_string(int(x1)) + ", " + std::to_string(int(y1)) + ", " + std::to_string(int(z1)) + ")";
 
@@ -470,12 +503,13 @@ void DrawingLib::drawRuler() {
     std::string string_length = std::to_string(length);
     glRasterPos3f((x2+x1)/2, (y2+y1)/2, (z2+z1)/2);
     print_string(string_length.c_str());
-
-
-
 }
 
-std::tuple<int, int>  DrawingLib::getCurrentViewport(double x_screen, double y_screen) const {
+std::tuple<int, int>  DrawingLib::getCurrentViewport(double x_screen, double y_screen) const
+/** Determines the viewport indices (i, j) by dividing the screen coordinates by half the window width and height,
+effectively identifying the viewport quadrant where the given screen coordinates reside. It is applied when
+Engineering view is turned on. */
+{
     int viewport_width = window_width_ / 2;
     int viewport_height = window_height_ / 2;
 
@@ -485,12 +519,16 @@ std::tuple<int, int>  DrawingLib::getCurrentViewport(double x_screen, double y_s
     return std::make_tuple(i, j);
 }
 
-std::tuple<double, double> DrawingLib::convertCoordinates(double x, double y){
+std::tuple<double, double> DrawingLib::convertCoordinates(double x, double y)
+/** Converts screen coordinates to world coordinates based on the camera view parameters and orthographic coefficient. */
+{
     auto orth_c = Config::getParameters().ortho_coefficient_;
-    if (x > window_width_/2){
+    if (x > window_width_/2)
+    {
         x = x- window_width_/2;
     }
-    if (y > window_height_/2){
+    if (y > window_height_/2)
+    {
         y = y- window_height_/2;
     }
 
@@ -504,8 +542,8 @@ std::tuple<double, double> DrawingLib::convertCoordinates(double x, double y){
     return std::make_tuple(a , b);
 }
 
-std::string DrawingLib::OrthViewToString(DomeCameraRotate view) const
-/** Returns regular name of the Object based on its enum ObjectType value.*/
+std::string DrawingLib::OrthViewToString(DomeCameraRotate view)
+/** Returns a string that describes the orthographic view based on the enum value, such as "Front view" or "Top view". */
 {
     switch (view)
     {
@@ -517,7 +555,9 @@ std::string DrawingLib::OrthViewToString(DomeCameraRotate view) const
     }
 }
 
-void DrawingLib::reset() {
+void DrawingLib::reset()
+/** Resets Camera settings to its initial values.*/
+{
     current_camera_->resetCamera();
     current_camera_->resetView();
 

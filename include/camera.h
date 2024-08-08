@@ -39,9 +39,8 @@ public:
     ViewCamera(CameraMode mode, glm::vec3 camera_position, glm::vec3 target_position, glm::vec3 up_direction);
     CameraMode mode(){return mode_;};
     void applyMatrix();
-
-    virtual void rotate(float delta_x=0, float delta_z=0){};
-    virtual void move(float delta_x=0, float delta_y=0){};
+    virtual void rotate(float delta_x, float delta_z){};
+    virtual void move(float delta_x, float delta_y){};
     void resetCamera();
 
     void switchView()
@@ -56,7 +55,6 @@ public:
     void resetView();
 
     void orthogonalView(){view_ = kOrthogonal;}
-    virtual void viewOrtho(DomeCameraRotate direction){};
     std::string getCameraMode();
     std::string getCameraView();
     ViewParams& getCameraViewParams(){return view_params_;}
@@ -79,25 +77,22 @@ protected:
 class FirstPersonCamera : public ViewCamera {
 public:
     FirstPersonCamera(glm::vec3 camera_position, glm::vec3 target_position, glm::vec3 up_direction);
-    void move(float delta_x=0, float delta_z=0) override;
-    void rotate(float delta_x=0, float delta_y=0) override;
+    void move(float delta_x, float delta_z) override;
+    void rotate(float delta_x, float delta_y) override;
 };
 
 class DomeCamera : public ViewCamera {
 public:
     DomeCamera(glm::vec3 camera_position, glm::vec3 target_position, glm::vec3 up_direction, double radius);
-    void move(float delta_x=0, float delta_z=0) override;
-    void rotate(float delta_x=0, float delta_y=0) override;
+    void move(float delta_x, float delta_z) override;
+    void rotate(float delta_x, float delta_y) override;
 
     void changeElevation();
     void changeAzimuth();
-    void viewOrtho(DomeCameraRotate direction) override;
-
-
+    void viewOrtho(DomeCameraRotate direction);
 
 private:
-    double radius_;
-
+    float radius_;
 };
 
 

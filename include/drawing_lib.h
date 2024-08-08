@@ -37,8 +37,7 @@ private:
     int window_height_{1080};
 
     float dim_ratio_ = static_cast<float>(window_height_) / static_cast<float>(window_width_);
-    double ortho_coefficient_ = 15.0;
-    float reference_size_{5.0};
+    float reference_size_{10.0};
 
     bool left_button_down_{false};
     bool right_button_down_{false};
@@ -67,15 +66,15 @@ private:
     void scrollCallback(GLFWwindow* window, double yoffset);
 
     void drawGrid();
-    void drawAxisArrow(float x, float y, float z, const std::string& axis_name);
+    static void drawAxisArrow(float x, float y, float z, const std::string& axis_name);
 
     std::tuple<double, double> calculateCoordinatesOnMouseMove(int correction_factor) const;
     std::tuple<int, int>  getCurrentViewport(double x_screen, double y_screen) const;
 
     std::tuple<int, int> current_viewport_;
     std::tuple<double, double> convertCoordinates(double x, double y);
-    void drawObjectsMetadata(int i, int j, DomeCameraRotate ortho_view);
-    std::string OrthViewToString(DomeCameraRotate view) const;
+    void printOrthoViewType(int i, int j, DomeCameraRotate ortho_view);
+    static std::string OrthViewToString(DomeCameraRotate view) ;
 };
 
 #endif //PROJECT_2_DRAWING_LIB_H
