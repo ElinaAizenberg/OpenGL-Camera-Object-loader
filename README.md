@@ -3,14 +3,12 @@
 A brief description of the project, its purpose, and what it does.
 
 ## Features
-List the key features of your project.
-Feature 1
-Feature 2
-Feature 3
+- 
 
 ## Screenshots
-<img src="https://github.com/user-attachments/assets/889a11ad-2051-49b2-9572-e9881aad1657" height="300"> <img src="https://github.com/user-attachments/assets/89436452-ce39-4269-811c-a98ccaf209fd" height="300">
+<img src="https://github.com/user-attachments/assets/889a11ad-2051-49b2-9572-e9881aad1657" width="500">
 
+<img src="https://github.com/user-attachments/assets/89436452-ce39-4269-811c-a98ccaf209fd" width="500">
 
 
 ## Getting Started
