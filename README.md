@@ -22,9 +22,9 @@ It serves as a practical example for beginners to learn and understand the intri
 - **Ruler Tool:** in Engineering View, apply a ruler tool with a right-click for precise measurements and alignments.
 
 ## Screenshots
-<img src="https://github.com/user-attachments/assets/889a11ad-2051-49b2-9572-e9881aad1657" width="500">
+<img src="https://github.com/user-attachments/assets/889a11ad-2051-49b2-9572-e9881aad1657" width="700">
 
-<img src="https://github.com/user-attachments/assets/89436452-ce39-4269-811c-a98ccaf209fd" width="500">
+<img src="https://github.com/user-attachments/assets/89436452-ce39-4269-811c-a98ccaf209fd" width="700">
 
 
 ## Getting Started
